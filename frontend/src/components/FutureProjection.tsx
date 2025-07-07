@@ -2,7 +2,7 @@ import { FC, useState, useEffect, FormEvent } from 'react'
 import { FiRefreshCw } from 'react-icons/fi'
 import styles from '../styles/FutureProjection.module.css'
 
-const API = process.env.NEXT_PUBLIC_API_URL || '';
+const API = process.env.NEXT_PUBLIC_API_URL || ''
 export interface FutureResult {
   symbol: string
   years: number
@@ -26,24 +26,18 @@ const FutureProjection: FC<Props> = ({ onResult }) => {
   const [basis, setBasis] = useState<'monthly'|'weekly'>('monthly')
   const [annualReturn, setAnnualReturn] = useState<number>(10)
 
-  useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY)
-    if (stored) onResult(JSON.parse(stored))
-  }, [])
-
-  const submit = async (e: FormEvent) => {
-    e.preventDefault()
+  const fetchData = async () => {
     const decimalReturn = annualReturn / 100
-    const base = new URLSearchParams({
+    const params = new URLSearchParams({
       symbol,
       years: String(years),
       amount: String(amount),
       basis,
       annual_return: String(decimalReturn)
     })
-    const annRes = await fetch(`${API}/stock/future?${base.toString()}&output=annual`)
+    const annRes = await fetch(`${API}/stock/future?${params}&output=annual`)
     const annJson = await annRes.json()
-    const totRes = await fetch(`${API}/stock/future?${base.toString()}`)
+    const totRes = await fetch(`${API}/stock/future?${params}`)
     const totJson = await totRes.json()
     const merged: FutureResult = {
       ...totJson,
@@ -52,6 +46,20 @@ const FutureProjection: FC<Props> = ({ onResult }) => {
     }
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(merged))
     onResult(merged)
+  }
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem(STORAGE_KEY)
+    if (stored) {
+      onResult(JSON.parse(stored))
+    } else {
+      fetchData()
+    }
+  }, [])
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault()
+    await fetchData()
   }
 
   return (
