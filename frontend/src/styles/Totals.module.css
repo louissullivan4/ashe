@@ -1,0 +1,26 @@
+.totals {
+  display: flex;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.card {
+  background: var(--color-card);
+  border-radius: 16px;
+  flex: 1;
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+  text-align: center;
+}
+
+.label {
+  font-size: 0.875rem;
+  color: var(--color-text);
+  margin-bottom: 4px;
+}
+
+.value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}

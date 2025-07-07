@@ -1,0 +1,28 @@
+.container {
+  display: inline-flex;
+  background: var(--color-card);
+  border-radius: 9999px;
+  padding: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.button {
+  flex: 1;
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  font-weight: 500;
+  color: var(--color-text);
+  cursor: pointer;
+  border-radius: 9999px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.button:hover {
+  background: rgba(79,70,229,0.1);
+}
+
+.active {
+  background: var(--color-primary);
+  color: #fff;
+}

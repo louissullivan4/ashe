@@ -1,0 +1,60 @@
+services:
+  traefik:
+    image: traefik:v2.10
+    command:
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - web
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ashe-backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`api.ashe.local`)"
+      - "traefik.http.routers.backend.entrypoints=web"
+      - "traefik.http.services.backend.loadbalancer.server.port=8000"
+    environment:
+      - STOCK_API_KEY=${STOCK_API_KEY}
+    volumes:
+      - backend-cache:/data
+    networks:
+      - web
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ashe-frontend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`ashe.local`)"
+      - "traefik.http.routers.frontend.entrypoints=web"
+      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://api.ashe.local
+    depends_on:
+      - traefik
+      - backend
+    networks:
+      - web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+
+volumes:
+  backend-cache:
+
+networks:
+  web:
+    driver: bridge

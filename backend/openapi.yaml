@@ -1,0 +1,268 @@
+openapi: 3.1.0
+info:
+  title: Ashe API
+  description: Investment tracker tool called Ashe
+  version: 0.0.1
+paths:
+  /stock/history:
+    get:
+      tags:
+      - stock
+      summary: Fetch OHLCV history for a given symbol (cached 24h)
+      operationId: get_stock_history_stock_history_get
+      parameters:
+      - name: interval
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^(daily|weekly|monthly)$
+          description: One of daily, weekly or monthly (defaults to monthly)
+          default: monthly
+          title: Interval
+        description: One of daily, weekly or monthly (defaults to monthly)
+      - name: symbol
+        in: query
+        required: true
+        schema:
+          type: string
+          description: Ticker symbol, e.g. VUAA.DE
+          title: Symbol
+        description: Ticker symbol, e.g. VUAA.DE
+      - name: outputsize
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^(compact|full)$
+          description: compact (last 100) or full (all history), defaults to full
+          default: full
+          title: Outputsize
+        description: compact (last 100) or full (all history), defaults to full
+      - name: start_date
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          description: Start date filter, format YYYY-MM-DD; defaults to earliest
+            data
+          title: Start Date
+        description: Start date filter, format YYYY-MM-DD; defaults to earliest data
+      - name: end_date
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          description: End date filter, format YYYY-MM-DD; defaults to latest data
+          title: End Date
+        description: End date filter, format YYYY-MM-DD; defaults to latest data
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TimeSeriesPoint'
+                title: Response Get Stock History Stock History Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /stock/future:
+    get:
+      tags:
+      - stock
+      summary: Project future value of regular contributions (uses cached history)
+      operationId: project_future_value_stock_future_get
+      parameters:
+      - name: symbol
+        in: query
+        required: true
+        schema:
+          type: string
+          description: Ticker symbol, e.g. VUAA.DE
+          title: Symbol
+        description: Ticker symbol, e.g. VUAA.DE
+      - name: years
+        in: query
+        required: false
+        schema:
+          type: integer
+          exclusiveMinimum: 0
+          description: Number of years to project
+          default: 5
+          title: Years
+        description: Number of years to project
+      - name: amount
+        in: query
+        required: false
+        schema:
+          type: number
+          exclusiveMinimum: 0
+          description: Amount invested each interval
+          default: 100.0
+          title: Amount
+        description: Amount invested each interval
+      - name: basis
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^(weekly|monthly)$
+          description: Contribution frequency; weekly or monthly
+          default: monthly
+          title: Basis
+        description: Contribution frequency; weekly or monthly
+      - name: annual_return
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: number
+          - type: 'null'
+          description: Override historical annual return (decimal, e.g. 0.07)
+          title: Annual Return
+        description: Override historical annual return (decimal, e.g. 0.07)
+      - name: output
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^(total|annual)$
+          description: '`total` for end-value summary, `annual` for per-year breakdown'
+          default: total
+          title: Output
+        description: '`total` for end-value summary, `annual` for per-year breakdown'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FutureResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    FutureResponse:
+      properties:
+        symbol:
+          type: string
+          title: Symbol
+        years:
+          type: integer
+          title: Years
+        basis:
+          type: string
+          title: Basis
+        contribution_per_period:
+          type: number
+          title: Contribution Per Period
+        periods_per_year:
+          type: integer
+          title: Periods Per Year
+        annual_return_used:
+          type: number
+          title: Annual Return Used
+          description: Annual rate used, in decimal
+        total_contributions:
+          type: number
+          title: Total Contributions
+        projected_value:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Projected Value
+          description: Lump-sum future value when output='total'
+        annual_balances:
+          anyOf:
+          - additionalProperties:
+              type: number
+            type: object
+          - type: 'null'
+          title: Annual Balances
+          description: Year-by-year balances when output='annual'
+      type: object
+      required:
+      - symbol
+      - years
+      - basis
+      - contribution_per_period
+      - periods_per_year
+      - annual_return_used
+      - total_contributions
+      title: FutureResponse
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    TimeSeriesPoint:
+      properties:
+        date:
+          type: string
+          format: date-time
+          title: Date
+        open:
+          type: number
+          title: Open
+        high:
+          type: number
+          title: High
+        low:
+          type: number
+          title: Low
+        close:
+          type: number
+          title: Close
+        volume:
+          type: integer
+          title: Volume
+      type: object
+      required:
+      - date
+      - open
+      - high
+      - low
+      - close
+      - volume
+      title: TimeSeriesPoint
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
