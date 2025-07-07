@@ -8,13 +8,15 @@ import totalsStyles from '../styles/Totals.module.css'
 import styles from '../styles/Index.module.css'
 import type { FutureResult } from '../components/FutureProjection'
 
+const API = process.env.NEXT_PUBLIC_API_URL || '';
+
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
 export default function Home() {
   const [tab, setTab] = useState<'history' | 'future'>('history')
   const [symbol, setSymbol] = useState('VUAA.DE')
   const { data: history, error: historyError } = useSWR<Point[]>(
-    tab === 'history' ? `/api/stock/history?symbol=${symbol}` : null,
+    tab === 'history' ? `${API}/stock/history?symbol=${symbol}` : null,
     fetcher
   )
   const [futureResult, setFutureResult] = useState<FutureResult>()

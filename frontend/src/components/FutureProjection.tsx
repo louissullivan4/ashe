@@ -2,6 +2,7 @@ import { FC, useState, useEffect, FormEvent } from 'react'
 import { FiRefreshCw } from 'react-icons/fi'
 import styles from '../styles/FutureProjection.module.css'
 
+const API = process.env.NEXT_PUBLIC_API_URL || '';
 export interface FutureResult {
   symbol: string
   years: number
@@ -40,9 +41,9 @@ const FutureProjection: FC<Props> = ({ onResult }) => {
       basis,
       annual_return: String(decimalReturn)
     })
-    const annRes = await fetch(`/api/stock/future?${base.toString()}&output=annual`)
+    const annRes = await fetch(`${API}/stock/future?${base.toString()}&output=annual`)
     const annJson = await annRes.json()
-    const totRes = await fetch(`/api/stock/future?${base.toString()}`)
+    const totRes = await fetch(`${API}/stock/future?${base.toString()}`)
     const totJson = await totRes.json()
     const merged: FutureResult = {
       ...totJson,
